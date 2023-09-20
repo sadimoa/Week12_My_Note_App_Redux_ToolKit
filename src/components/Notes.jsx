@@ -1,12 +1,29 @@
 /* eslint-disable react/prop-types */
-
-import React from "react";
+import React, { useEffect } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchNotes, deleteNote } from "../store/api/NoteSlice";
+import { Link, useNavigate } from "react-router-dom";
 
-function Notes(props) {
+function Notes() {
+  const { notes } = useSelector((state) => state.note);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    dispatch(fetchNotes());
+  }, [dispatch]);
+
+  function handleDelete(id) {
+    dispatch(deleteNote(id))
+    .then(() => {
+    navigate("/");
+  });
+  }
+
   return (
     <div className="flex flex-wrap justify-center mt-5">
-      {props.notes.map((note) => (
+      {notes.map((note) => (
         <div
           className="relative bg-yellow-400 w-64 h-64 m-5 shadow-2xl overflow-hidden"
           key={note.id}
@@ -17,11 +34,13 @@ function Notes(props) {
           </div>
           <div className="absolute bg-yellow-400 w-12 h-12 rotate-45 -top-6 -left-6" />
           <div className="absolute bottom-0 left-0 right-0 flex justify-center p-4">
-            <button className="mr-2">
-              <FaEdit size={20} onClick={() => props.handleEdit(note.id, note)} />
-            </button>
+            <Link to={`/edit/${note.id}`}>
+              <button className="mr-2">
+                <FaEdit size={20} />
+              </button>
+            </Link>
             <button>
-              <FaTrash size={20} onClick={() => props.deleteNote(note.id)} />
+              <FaTrash size={20} onClick={() => handleDelete(note.id)} />
             </button>
           </div>
         </div>
