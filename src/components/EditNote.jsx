@@ -1,25 +1,46 @@
-import React from 'react';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
-import * as Yup from 'yup';
+import React, { useEffect, useState } from "react";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import { useSelector, useDispatch } from "react-redux";
+import { editNote, fetchNotes } from "../store/api/NoteSlice";
+import { useParams, useNavigate } from "react-router-dom";
 
-const EditNote = (props) => {
-  const initialValues = {
-    title: props.initialValues.title,
-    content: props.initialValues.content,
-  };
-
-  const validationSchema = Yup.object({
-    title: Yup.string().required('Title is required'),
-    content: Yup.string().required('Content is required'),
+const EditNote = () => {
+  const dispatch = useDispatch();
+  const [initialValues, setCurrentNote] = useState({
+    title: "",
+    content: "",
   });
 
-  const handleSubmit = (values, { resetForm }) => {
-    // Send the data to the server (localhost:9000/update_note)
-    console.log('Sending data:', values);
-    props.editNote(values);
+  const params = useParams();
+  const navigate = useNavigate();
+  const notes = useSelector((state) => state.note.notes);
 
-    // Reset the form after submission
-    resetForm();
+  useEffect(() => {
+    dispatch(fetchNotes());
+  }, [dispatch]);
+
+  useEffect(() => {
+    const note = notes.find((note) => note.id === Number(params.id));
+    if (note) {
+      setCurrentNote(note);
+    }
+  }, [notes, params.id]);
+
+  const validationSchema = Yup.object({
+    title: Yup.string().required("Title is required"),
+    content: Yup.string().required("content is required"),
+  });
+
+  const handleSubmit = (values, {resetForm}) => {
+    dispatch(
+      editNote({
+        noteId: Number(params.id),
+        updatedNote: values,
+      })
+    ).then(() => {
+      navigate("/");
+    });
   };
 
   return (
@@ -28,6 +49,7 @@ const EditNote = (props) => {
         initialValues={initialValues}
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
+        enableReinitialize
       >
         <Form>
           <div className="mb-5">
@@ -38,7 +60,11 @@ const EditNote = (props) => {
               placeholder="Title"
               className="border border-gray-300 shadow p-3 w-full rounded mb-"
             />
-            <ErrorMessage name="title" component="div" className="text-red-500" />
+            <ErrorMessage
+              name="title"
+              component="div"
+              className="text-red-500"
+            />
           </div>
 
           <div className="mb-5">
@@ -48,7 +74,11 @@ const EditNote = (props) => {
               placeholder="Body"
               className="border border-gray-300 shadow p-3 w-full rounded mb-"
             />
-            <ErrorMessage name="content" component="div" className="text-red-500" />
+            <ErrorMessage
+              name="content"
+              component="div"
+              className="text-red-500"
+            />
           </div>
 
           <button
